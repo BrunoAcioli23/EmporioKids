@@ -388,7 +388,7 @@
 
         /* --- Card de Produto --- */
         .product-card {
-            background-color: var(--cor-secundaria);
+            background-color: #f4feff;
             border-radius: 0.5rem;
             overflow: hidden;
             display: flex;
@@ -400,7 +400,8 @@
             min-height: 500px;;
             max-height: 500px;;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0px 0px 10px #ffffff9d;
+            box-shadow: 0px 0px 14px #fff;
+            border: 2px solid #28cce2;
             cursor: pointer;
         }
         
@@ -437,9 +438,10 @@
 
         .product-info h3 {
             font-size: 1.225rem;
-            font-weight: 200;
+            font-weight: 500;
             flex-grow: 1;
             text-align: center;
+            color: var(--cor-secundaria);
         }
 
         .product-rating {
@@ -472,13 +474,14 @@
             font-size: 1.25rem;
             font-weight: 700;
             margin-left: 0.5rem;
+            color: var(--cor-secundaria);
         }
 
         .add-to-cart-btn {
             margin-top: 1rem;
             width: 100%;
-            background-color: var(--cor-primaria);
-            color: var(--cor-fundo);
+            background-color: var(--cor-secundaria);
+            color: #fff;
             font-weight: 700;
             padding: 0.75rem;
             border-radius: 0.5rem;
@@ -488,7 +491,7 @@
         }
 
         .add-to-cart-btn:hover {
-            background-color: #b0b0b0; /* Hover mais escuro para o cinza */
+            background-color: #ccf9ff; /* Hover mais escuro para o cinza */
         }
 
         /* --- Rodapé --- */
@@ -777,10 +780,10 @@
             font-size: 1.5rem;
         }
         .footer-bottom .social-links a:hover {
-            color: var(--cor-primaria);
+            color: var(--cor-secundaria);
         }
         .footer-bottom p {
-            color: #fff;
+            color: var(--cor-secundaria);
             font-size: 0.9rem;
             margin: 20px 0 0 0;
         }
@@ -819,11 +822,7 @@
        .product-pricing { margin: 0.5rem 0; }
        .product-pricing.old-price { font-size: 0.8rem; color: #6b7280; text-decoration: line-through; }
        .product-pricing.current-price { font-size: 1.1rem; font-weight: 700; margin-left: 0.5rem; }
-       .add-to-cart-btn {
-            margin-top: 1rem; width: 100%; background-color: var(--cor-primaria);
-            color: var(--cor-fundo); font-weight: 700; padding: 0.75rem;
-            border-radius: 0.5rem; border: none; cursor: pointer;
-        }
+
        .favorite-btn {
             position: absolute; top: 10px; right: 10px;
             background: rgba(0,0,0,0.4); border-radius: 50%;
