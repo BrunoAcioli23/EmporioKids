@@ -1,3 +1,16 @@
+:root {
+            --cor-secundaria: #59daec; /* Cinza claro (substituído do dourado) */
+            --cor-primaria: #ffffff;
+            --cor-fundo: #111111;
+            --cor-fundo-secundario: #1a1a1a;
+            --cor-fundo-modal: #222222;
+            --cor-texto-principal: #f0f0f0;
+            --cor-texto-secundario: #a0a0a0;
+            --cor-sucesso: #25D366;
+            --cor-sucesso-hover: #128C7E;
+            --cor-erro: #f44336;
+        }
+
 /* --- GERAL DA PÁGINA DE PRODUTOS --- */
 .produtos-page-container {
     padding: 1rem;
@@ -14,7 +27,7 @@
 /* --- FILTROS (DESKTOP) --- */
 .filtros {
     flex: 0 0 250px; /* Base de 250px, não cresce nem encolhe */
-    background-color: var(--cor-fundo-secundario);
+    background-color: #ffffffda;
     border: 1px solid #2a2a2a;
     border-radius: 10px;
     padding: 1.5rem;
@@ -37,7 +50,7 @@
 .filtro-grupo h4 {
     margin-bottom: 1rem;
     font-size: 1.1rem;
-    color: var(--cor-primaria);
+    color: var(--cor-secundaria);
 }
 
 .filtro-grupo label {
@@ -45,10 +58,11 @@
     margin-bottom: 0.75rem;
     cursor: pointer;
     transition: color 0.2s;
+    color: #000
 }
 
 .filtro-grupo label:hover {
-    color: var(--cor-primaria);
+    color: var(--cor-secundaria);
 }
 
 .filtro-grupo input {
@@ -113,6 +127,7 @@
     }
     .filtros-header h3 {
         font-size: 1.5rem;
+        color: var(--cor-secundaria)
     }
     .close-filtros-btn {
         background: none;
