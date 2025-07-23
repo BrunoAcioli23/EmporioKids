@@ -136,62 +136,79 @@
         <div id="admin-panel" class="tab-content hidden">
             <h2>Cadastrar/Editar Produto</h2>
             <form id="product-form">
-                <div class="form-group">
-                    <label for="product-name">Nome do Produto</label>
-                    <input type="text" id="product-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="product-cost">Valor de Compra (ex: 79.90)</label>
-                    <input type="number" step="0.01" id="product-cost" required>
-                </div>
-                <div class="form-group">
-                    <label for="product-price">Preço de Venda (ex: 159.90)</label>
-                    <input type="number" step="0.01" id="product-price" required>
-                </div>
-                <div class="form-group">
-                    <label for="product-old-price">Preço Antigo (Opcional)</label>
-                    <input type="number" step="0.01" id="product-old-price">
-                </div>
-                <div class="form-group">
-                    <label for="product-stock">Quantidade em Estoque</label>
-                    <input type="number" id="product-stock" min="0" required>
-                </div>
-                <div class="form-group">
-                    <label for="product-image">Imagem do Produto</label>
-                    <input type="file" id="product-image" accept="image/*">
-                </div>
-                <div class="form-group">
-                    <label for="product-category">Categoria</label>
-                    <select id="product-category" required>
-                        <option value="">Selecione...</option>
-                        <option value="camiseta">Camiseta</option>
-                        <option value="bermuda">Bermuda</option>
-                        <option value="regata">Regata</option>
-                        <option value="blusa">Blusa</option>
-                        <option value="saia">S</option>
-                        <option value="vestido">Vestido</option>
-                        <option value="calça">Calça</option>
-                        <option value="macacao">Macacão</option>
-                        <option value="conjunto">Conjunto</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Gênero</label>
-                    <div class="radio-group">
-                        <input type="radio" id="gender-masculino" name="gender" value="masculino">
-                        <label for="gender-masculino">Masculino</label>
-                        <input type="radio" id="gender-feminino" name="gender" value="feminino">
-                        <label for="gender-feminino">Feminino</label>
-                        <input type="radio" id="gender-unissex" name="gender" value="unissex" checked>
-                        <label for="gender-unissex">Unissex</label>
-                    </div>
-                </div>
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="product-is-selected">
-                    <label for="product-is-selected">Marcar como "Seleção do Crema"</label>
-                </div>
-                <button type="submit" class="btn btn-primary" id="submit-btn">Cadastrar Produto</button>
+
+            <!-- Nome -->
+            <div class="form-group">
+                <label for="product-name">Nome:</label>
+                <input type="text" id="product-name" required>
+            </div>
+
+            <!-- Descrição -->
+            <div class="form-group">
+                <label for="product-description">Descrição:</label>
+                <textarea id="product-description"></textarea>
+            </div>
+
+            <!-- Categoria -->
+            <div class="form-group">
+                <label for="product-category">Categoria:</label>
+                <select id="product-category" required>
+                <option value="">Selecione</option>
+                <option value="camiseta">Camiseta</option>
+                <option value="calça">Calça</option>
+                <option value="vestido">Vestido</option>
+                <option value="shorts">Shorts</option>
+                <option value="outros">Outros</option>
+                </select>
+            </div>
+
+            <!-- Tamanhos e estoque -->
+            <!-- Checkbox de tamanho -->
+            <div class="checkbox-group" id="size-options">
+                <label><input type="checkbox" value="PP" class="size-checkbox"> PP</label>
+                <label><input type="checkbox" value="P" class="size-checkbox"> P</label>
+                <label><input type="checkbox" value="M" class="size-checkbox"> M</label>
+                <label><input type="checkbox" value="G" class="size-checkbox"> G</label>
+                <label><input type="checkbox" value="GG" class="size-checkbox"> GG</label>
+            </div>
+
+            <!-- Aqui vão os campos de quantidade -->
+            <div id="size-quantities" class="form-group"></div>
+
+            <!-- Cor -->
+            <div class="form-group">
+                <label for="product-color">Cor:</label>
+                <input type="text" id="product-color" required placeholder="Ex: Azul, Preto, Bege...">
+            </div>
+
+            <!-- Preço de Compra -->
+            <div class="form-group">
+                <label for="product-cost">Preço de Compra:</label>
+                <input type="number" id="product-cost" step="0.01" required>
+            </div>
+
+            <!-- Preço de Venda -->
+            <div class="form-group">
+                <label for="product-price">Preço de Venda:</label>
+                <input type="number" id="product-price" step="0.01" required>
+            </div>
+
+            <!-- Valor Anterior -->
+            <div class="form-group">
+                <label for="product-old-price">Valor Anterior:</label>
+                <input type="number" id="product-old-price" step="0.01" placeholder="(opcional)">
+            </div>
+
+            <!-- Imagem -->
+            <div class="form-group">
+                <label for="product-image">Imagem:</label>
+                <input type="file" id="product-image" accept="image/*" required>
+            </div>
+
+            <!-- Botão -->
+            <button type="submit" class="btn btn-primary">Salvar Produto</button>
             </form>
+
             <button id="logout-btn" class="btn btn-danger" style="margin-top: 2rem;">Sair</button>
         </div>
         

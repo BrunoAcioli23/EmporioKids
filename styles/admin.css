@@ -1,5 +1,7 @@
 /* --- ESTILOS GLOBAIS PARA O PAINEL DE ADMINISTRAÇÃO --- */
 :root {
+    --cor-secundaria: #59daec; /* Cinza claro (substituído do dourado) */
+    --cor-primaria: #ffffff;
     --admin-bg: #111;
     --admin-bg-secondary: #1e1e1e;
     --admin-card-bg: #2a2a2a;
@@ -73,7 +75,7 @@ h1, h2 {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: var(--admin-text-secondary);
+    color: #000;
 }
 
 .form-group input, 
@@ -82,8 +84,8 @@ h1, h2 {
     padding: 0.8rem;
     border-radius: 6px;
     border: 1px solid var(--admin-border-color);
-    background-color: var(--admin-bg-secondary);
-    color: var(--admin-text);
+    background-color: var(--cor-primaria);
+    color: #000;
     box-sizing: border-box;
     font-size: 1rem;
 }

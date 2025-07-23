@@ -364,6 +364,17 @@ if (productForm) {
                 isSelected: document.getElementById('product-is-selected').checked,
                 gender: document.querySelector('input[name="gender"]:checked').value,
             };
+
+            const sizeInputs = document.querySelectorAll(".size-quantity-input");
+            const sizes = {};
+            sizeInputs.forEach(input => {
+            const size = input.dataset.size;
+            const qty = parseInt(input.value) || 0;
+            sizes[size] = qty;
+            });
+            productData.sizes = sizes; // Salva no Firebase
+
+
             if (editingProductId) {
                 const productRef = doc(db, "products", editingProductId);
                 const productSnap = await getDoc(productRef);
@@ -442,25 +453,104 @@ if (logoutBtn) {
 }
 
 // --- INICIALIZAÇÃO ---
+// Dentro do onAuthStateChanged
 onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists() && userDocSnap.data().role === 'admin') {
-            if(loginSection) loginSection.classList.add('hidden');
-            if(document.getElementById('admin-tabs')) document.getElementById('admin-tabs').classList.remove('hidden');
-            
-            showTab('dashboard');
-            loadProducts();
-            loadDashboard();
-            loadOrders();
-        } else {
-            showMessage('Acesso negado. Você não é um administrador.', 'error');
-            signOut(auth);
-        }
+  if (user) {
+    const userDocRef = doc(db, "users", user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    if (userDocSnap.exists() && userDocSnap.data().role === 'admin') {
+      if (loginSection) loginSection.classList.add('hidden');
+      if (document.getElementById('admin-tabs')) document.getElementById('admin-tabs').classList.remove('hidden');
+      showTab('dashboard');
+      loadProducts();
+      loadDashboard();
+      loadOrders();
     } else {
-        if(loginSection) loginSection.classList.remove('hidden');
-        if(document.getElementById('admin-tabs')) document.getElementById('admin-tabs').classList.add('hidden');
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      showMessage('Acesso negado. Você não é um administrador.', 'error');
+      signOut(auth);
     }
+  } else {
+    if (loginSection) loginSection.classList.remove('hidden');
+    if (document.getElementById('admin-tabs')) document.getElementById('admin-tabs').classList.add('hidden');
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  }
+
+  // Cadastro de produto com tamanhos, cores e imagem
+  const productForm = document.getElementById("product-form");
+  productForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("product-name").value.trim();
+    const description = document.getElementById("product-description").value.trim();
+    const category = document.getElementById("product-category").value;
+    const color = document.getElementById("product-color").value.trim();
+    const cost = parseFloat(document.getElementById("product-cost").value);
+    const price = parseFloat(document.getElementById("product-price").value);
+    const oldPrice = parseFloat(document.getElementById("product-old-price").value || 0);
+
+    const sizes = {};
+    document.querySelectorAll("#sizes-quantities input[type='number']").forEach(input => {
+      const size = input.id.replace("stock-", "");
+      const qty = parseInt(input.value);
+      if (!isNaN(qty) && qty > 0) {
+        sizes[size] = qty;
+      }
+    });
+
+    const imageFile = document.getElementById("product-image").files[0];
+    if (!imageFile) {
+      showMessage("Selecione uma imagem para o produto.", "error");
+      return;
+    }
+
+    const imageRef = ref(storage, `products/${Date.now()}-${imageFile.name}`);
+    await uploadBytes(imageRef, imageFile);
+    const imageUrl = await getDownloadURL(imageRef);
+
+    const newProduct = {
+      name,
+      description,
+      category,
+      color,
+      cost,
+      price,
+      oldPrice,
+      sizes,
+      image: imageUrl,
+      createdAt: serverTimestamp()
+    };
+
+    await addDoc(collection(db, "products"), newProduct);
+    showMessage("Produto cadastrado com sucesso!", "success");
+    productForm.reset();
+    document.getElementById("sizes-quantities").innerHTML = "";
+    loadProducts();
+  });
+});
+
+const sizeOptionsContainer = document.getElementById("size-options");
+const sizeQuantitiesContainer = document.getElementById("size-quantities");
+
+// Escuta qualquer mudança em qualquer checkbox
+sizeOptionsContainer.addEventListener("change", (e) => {
+  if (e.target.classList.contains("size-checkbox")) {
+    const size = e.target.value;
+    const existingInput = sizeQuantitiesContainer.querySelector(`[data-size="${size}"]`);
+
+    if (e.target.checked && !existingInput) {
+      // Cria o campo de quantidade para esse tamanho
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = 0;
+      input.placeholder = `Quantidade para tamanho ${size}`;
+      input.classList.add("size-quantity-input");
+      input.setAttribute("data-size", size);
+      input.required = true;
+      input.style.marginBottom = "0.5rem";
+      sizeQuantitiesContainer.appendChild(input);
+    } else if (!e.target.checked && existingInput) {
+      // Remove o campo se o checkbox for desmarcado
+      sizeQuantitiesContainer.removeChild(existingInput);
+    }
+  }
 });
