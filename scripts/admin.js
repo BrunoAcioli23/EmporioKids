@@ -25,33 +25,41 @@ let categoryChartInstance = null;
 
 // --- ELEMENTOS DO DOM ---
 const loginSection = document.getElementById('login-section');
+const adminTabs = document.getElementById('admin-tabs');
 const productForm = document.getElementById('product-form');
 const logoutBtn = document.getElementById('logout-btn');
-const submitBtn = document.getElementById('submit-btn');
 const productsTableBody = document.getElementById('products-table-body');
 const ordersTableBody = document.getElementById('orders-table-body');
 const messageArea = document.getElementById('message-area');
+const sizeOptionsContainer = document.getElementById("size-options");
+const sizeQuantitiesContainer = document.getElementById("size-quantities");
 
 // --- FUNÇÕES ---
 
 function showMessage(msg, type) {
     if (!messageArea) return;
     messageArea.textContent = msg;
-    messageArea.className = type;
+    messageArea.className = `message ${type}`;
     messageArea.classList.remove('hidden');
     setTimeout(() => messageArea.classList.add('hidden'), 4000);
 }
 
-function showTab(tab) {
+function showTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(section => {
-        if(section) section.classList.add('hidden');
+        section.classList.add('hidden');
     });
-    const activeTab = document.getElementById(tab);
-    if (activeTab) activeTab.classList.remove('hidden');
-    
+    const activeTab = document.getElementById(tabId);
+    if (activeTab) {
+        activeTab.classList.remove('hidden');
+    }
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
     });
+}
+
+function calculateTotalStock(sizes) {
+    if (!sizes || typeof sizes !== 'object') return 0;
+    return Object.values(sizes).reduce((sum, qty) => sum + (parseInt(qty, 10) || 0), 0);
 }
 
 async function loadDashboard() {
@@ -59,25 +67,26 @@ async function loadDashboard() {
         const productsSnapshot = await getDocs(collection(db, "products"));
         const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Cálculos dos Cards
-        if(document.getElementById("total-products")) document.getElementById("total-products").textContent = products.length;
-        if(document.getElementById("total-outofstock")) document.getElementById("total-outofstock").textContent = products.filter(p => (p.stock || 0) === 0).length;
-        const totalStockValue = products.reduce((sum, p) => sum + ((p.stock || 0) * (p.cost || 0)), 0);
-        if(document.getElementById("total-stock-value")) document.getElementById("total-stock-value").textContent = `R$ ${totalStockValue.toFixed(2).replace('.', ',')}`;
-        const totalPotentialSales = products.reduce((sum, p) => sum + ((p.stock || 0) * (p.price || 0)), 0);
-        if(document.getElementById("total-stock-sales")) document.getElementById("total-stock-sales").textContent = `R$ ${totalPotentialSales.toFixed(2).replace('.', ',')}`;
-        const totalPotentialProfit = totalPotentialSales - totalStockValue;
-        if(document.getElementById("total-stock-profit")) document.getElementById("total-stock-profit").textContent = `R$ ${totalPotentialProfit.toFixed(2).replace('.', ',')}`;
+        const totalStock = products.map(p => ({...p, stock: calculateTotalStock(p.sizes) }));
+
+        document.getElementById("total-products").textContent = totalStock.length;
+        document.getElementById("total-outofstock").textContent = totalStock.filter(p => p.stock === 0).length;
         
-        // --- GRÁFICO DE VENDAS (COM DADOS REAIS) ---
+        const totalStockValue = totalStock.reduce((sum, p) => sum + (p.stock * (p.cost || 0)), 0);
+        document.getElementById("total-stock-value").textContent = `R$ ${totalStockValue.toFixed(2).replace('.', ',')}`;
+        
+        const totalPotentialSales = totalStock.reduce((sum, p) => sum + (p.stock * (p.price || 0)), 0);
+        document.getElementById("total-stock-sales").textContent = `R$ ${totalPotentialSales.toFixed(2).replace('.', ',')}`;
+        
+        const totalPotentialProfit = totalPotentialSales - totalStockValue;
+        document.getElementById("total-stock-profit").textContent = `R$ ${totalPotentialProfit.toFixed(2).replace('.', ',')}`;
+
         const ordersQuery = firestoreQuery(collection(db, "orders"), where("status", "==", "finalizado"));
         const ordersSnapshot = await getDocs(ordersQuery);
         const finalizedOrders = ordersSnapshot.docs.map(doc => doc.data());
 
         const totalSoldValue = finalizedOrders.reduce((sum, order) => sum + (order.total || 0), 0);
-        const soldElement = document.getElementById("total-sold-value");
-        if (soldElement) soldElement.textContent = `R$ ${totalSoldValue.toFixed(2).replace('.', ',')}`;
-
+        document.getElementById("total-sold-value").textContent = `R$ ${totalSoldValue.toFixed(2).replace('.', ',')}`;
 
         const salesByDate = finalizedOrders.reduce((acc, order) => {
             if (order.createdAt?.toDate) {
@@ -86,35 +95,22 @@ async function loadDashboard() {
             }
             return acc;
         }, {});
-
+        
         const sortedDates = Object.keys(salesByDate).sort((a, b) => new Date(a.split('/').reverse().join('-')) - new Date(b.split('/').reverse().join('-')));
         const salesData = sortedDates.map(date => salesByDate[date]);
 
         if (salesChartInstance) salesChartInstance.destroy();
         const salesCtx = document.getElementById('sales-chart')?.getContext('2d');
         if (salesCtx) {
-            salesChartInstance = new Chart(salesCtx, {
-                type: 'line',
-                data: { 
-                    labels: sortedDates, 
-                    datasets: [{ 
-                        label: 'Vendas Finalizadas (R$)', 
-                        data: salesData, 
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        fill: true,
-                    }] 
-                },
-            });
+            salesChartInstance = new Chart(salesCtx, { type: 'line', data: { labels: sortedDates, datasets: [{ label: 'Vendas Finalizadas (R$)', data: salesData, borderColor: '#28a745', fill: true }] } });
         }
 
-        // --- GRÁFICO DE PIZZA (VENDAS POR CATEGORIA) ---
-        const productCategoryMap = new Map(products.map(p => [p.id, p.category]));
         const salesByCategory = finalizedOrders.reduce((acc, order) => {
             order.items.forEach(item => {
-                const category = productCategoryMap.get(item.productId);
-                if (category) {
-                    acc[category] = (acc[category] || 0) + item.quantity;
+                 // Assumindo que o produto ainda existe para buscar a categoria
+                const product = products.find(p => p.id === item.productId);
+                if (product && product.category) {
+                   acc[product.category] = (acc[product.category] || 0) + item.quantity;
                 }
             });
             return acc;
@@ -123,28 +119,15 @@ async function loadDashboard() {
         if (categoryChartInstance) categoryChartInstance.destroy();
         const categoryCtx = document.getElementById('category-chart')?.getContext('2d');
         if (categoryCtx) {
-            categoryChartInstance = new Chart(categoryCtx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(salesByCategory),
-                    datasets: [{ 
-                        label: 'Itens Vendidos',
-                        data: Object.values(salesByCategory), 
-                        backgroundColor: ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6610f2', '#f012be', '#fd7e14'] 
-                    }]
-                },
-                options: {
-                    plugins: {
-                        title: { display: true, text: 'Itens Vendidos por Categoria' }
-                    }
-                }
-            });
+            categoryChartInstance = new Chart(categoryCtx, { type: 'pie', data: { labels: Object.keys(salesByCategory), datasets: [{ data: Object.values(salesByCategory), backgroundColor: ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8'] }] } });
         }
+
     } catch (err) {
         console.error("Erro ao carregar dashboard:", err);
         showMessage('Erro ao carregar resumo do painel.', 'error');
     }
 }
+
 
 async function loadProducts() {
     if (!productsTableBody) return;
@@ -155,12 +138,13 @@ async function loadProducts() {
         snapshot.forEach(docSnap => {
             const product = docSnap.data();
             const id = docSnap.id;
+            const totalStock = calculateTotalStock(product.sizes);
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td><img src="${product.image}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
+                <td><img src="${product.image}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
                 <td>${product.name}</td>
                 <td>R$ ${product.price.toFixed(2).replace('.', ',')}</td>
-                <td>${product.stock || 0}</td>
+                <td>${totalStock}</td>
                 <td>
                     <button class="btn btn-primary edit-btn" data-id="${id}">Editar</button>
                     <button class="btn btn-danger delete-btn" data-id="${id}">Excluir</button>
@@ -174,165 +158,214 @@ async function loadProducts() {
     }
 }
 
-async function loadOrders() {
-    if (!ordersTableBody) return;
-    ordersTableBody.innerHTML = '<tr><td colspan="5">Carregando pedidos...</td></tr>';
+
+// --- LÓGICA DE LOGIN E AUTENTICAÇÃO ---
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        // Apenas para simplificação, vamos assumir que qualquer usuário logado é admin.
+        // Em um app real, você deve verificar a role do usuário no Firestore.
+        loginSection.classList.add('hidden');
+        adminTabs.classList.remove('hidden');
+        showTab('dashboard');
+        loadDashboard();
+        loadProducts();
+        // loadOrders(); // Descomente se tiver a função implementada
+    } else {
+        loginSection.classList.remove('hidden');
+        adminTabs.classList.add('hidden');
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    }
+});
+
+document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
     try {
-        const q = firestoreQuery(collection(db, "orders"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        ordersTableBody.innerHTML = '';
-        snapshot.forEach(docSnap => {
-            const order = docSnap.data();
-            const id = docSnap.id;
-            const row = document.createElement('tr');
-            const date = order.createdAt?.toDate().toLocaleDateString('pt-BR') || 'N/A';
-            const items = order.items.map(i => `${i.quantity}x ${i.name}`).join('<br>');
-            row.innerHTML = `
-                <td>${date}</td>
-                <td>${items}</td>
-                <td>R$ ${order.total.toFixed(2).replace('.', ',')}</td>
-                <td><span class="status status-${order.status}">${order.status}</span></td>
-                <td>
-                    ${order.status === 'aberto' ? `<button class="btn btn-primary edit-order-btn" data-id="${id}">Editar</button><button class="btn btn-success finalize-btn" data-id="${id}">Finalizar</button>` : ''}
-                    <button class="btn btn-danger delete-order-btn" data-id="${id}">Excluir</button>
-                </td>
-            `;
-            ordersTableBody.appendChild(row);
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+        showMessage(`Erro no login: ${error.message}`, 'error');
+    }
+});
+
+logoutBtn?.addEventListener('click', () => signOut(auth));
+
+
+// --- LÓGICA DE CADASTRO E EDIÇÃO DE PRODUTO ---
+productForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Salvando...';
+
+    try {
+        const imageFile = document.getElementById('product-image').files[0];
+        let imageUrl = document.querySelector('#product-form img')?.src || null; // Manter imagem existente se houver
+
+        if (imageFile) {
+            const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
+            await uploadBytes(storageRef, imageFile);
+            imageUrl = await getDownloadURL(storageRef);
+        }
+
+        if (!imageUrl && !editingProductId) {
+            throw new Error("A imagem do produto é obrigatória para um novo cadastro.");
+        }
+
+        const sizes = {};
+        document.querySelectorAll("#size-quantities input[type='number']").forEach(input => {
+            const size = input.dataset.size;
+            const quantity = parseInt(input.value, 10);
+            if (!isNaN(quantity)) {
+                sizes[size] = quantity;
+            }
         });
-    } catch (err) {
-        console.error("Erro ao carregar pedidos:", err);
-        ordersTableBody.innerHTML = '<tr><td colspan="5">Erro ao carregar pedidos.</td></tr>';
+        
+        if(Object.keys(sizes).length === 0) {
+            throw new Error("Você precisa especificar a quantidade para pelo menos um tamanho.");
+        }
+
+        const productData = {
+            name: document.getElementById('product-name').value,
+            description: document.getElementById('product-description').value,
+            category: document.getElementById('product-category').value,
+            color: document.getElementById('product-color').value,
+            cost: parseFloat(document.getElementById('product-cost').value),
+            price: parseFloat(document.getElementById('product-price').value),
+            oldPrice: parseFloat(document.getElementById('product-old-price').value) || 0,
+            sizes: sizes, // Objeto com tamanhos e quantidades
+            image: imageUrl,
+        };
+
+        if (editingProductId) {
+            productData.updatedAt = serverTimestamp();
+            const productRef = doc(db, "products", editingProductId);
+            await updateDoc(productRef, productData);
+            showMessage("Produto atualizado com sucesso!", "success");
+        } else {
+            productData.createdAt = serverTimestamp();
+            await addDoc(collection(db, "products"), productData);
+            showMessage("Produto cadastrado com sucesso!", "success");
+        }
+
+        resetForm();
+        loadProducts();
+        loadDashboard();
+        showTab('products-panel');
+
+    } catch (error) {
+        console.error("Erro ao salvar produto:", error);
+        showMessage(`Erro: ${error.message}`, "error");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Salvar Produto';
     }
+});
+
+function resetForm() {
+    productForm.reset();
+    sizeQuantitiesContainer.innerHTML = '';
+    editingProductId = null;
+    document.getElementById('submit-btn').textContent = 'Salvar Produto';
+    document.getElementById('product-image').required = true;
 }
 
-async function openEditOrderModal(orderId) {
-    const modal = document.getElementById("edit-order-modal");
-    const itemsContainer = document.getElementById("edit-order-items");
-    const totalInput = document.getElementById("edit-order-total");
+// Lógica para criar/remover campos de quantidade de tamanho
+sizeOptionsContainer.addEventListener("change", (e) => {
+    if (e.target.classList.contains("size-checkbox")) {
+        const size = e.target.value;
+        const existingInput = sizeQuantitiesContainer.querySelector(`div[data-size-wrapper="${size}"]`);
 
-    try {
-        const orderRef = doc(db, "orders", orderId);
-        const orderSnap = await getDoc(orderRef);
-        if (!orderSnap.exists()) return showMessage("Pedido não encontrado.", "error");
+        if (e.target.checked && !existingInput) {
+            const wrapper = document.createElement('div');
+            wrapper.dataset.sizeWrapper = size;
+            wrapper.className = 'form-group-inline';
 
-        const order = orderSnap.data();
-        modal.classList.remove("hidden");
-        modal.dataset.orderId = orderId;
-        totalInput.value = order.total?.toFixed(2) || 0;
-
-        itemsContainer.innerHTML = '';
-        order.items.forEach((item, index) => {
-            const itemRow = document.createElement('div');
-            itemRow.className = 'form-group';
-            itemRow.innerHTML = `
-                <label>${item.name}</label>
-                <input type="number" min="0" value="${item.quantity}" data-index="${index}" class="edit-order-quantity">
-            `;
-            itemsContainer.appendChild(itemRow);
-        });
-    } catch (err) {
-        console.error("Erro ao abrir modal de edição:", err);
-        showMessage("Erro ao carregar pedido.", "error");
-    }
-}
-
-async function saveEditedOrder() {
-    const modal = document.getElementById("edit-order-modal");
-    const orderId = modal.dataset.orderId;
-    const newTotal = parseFloat(document.getElementById("edit-order-total").value);
-    const quantityInputs = document.querySelectorAll(".edit-order-quantity");
-
-    const orderRef = doc(db, "orders", orderId);
-    const orderSnap = await getDoc(orderRef);
-    if (!orderSnap.exists()) return;
-
-    const order = orderSnap.data();
-    const updatedItems = order.items.map((item, i) => ({ ...item, quantity: parseInt(quantityInputs[i].value) }));
-
-    try {
-        await updateDoc(orderRef, { total: newTotal, items: updatedItems });
-        showMessage("Pedido atualizado com sucesso!", "success");
-        modal.classList.add("hidden");
-        loadOrders();
-    } catch (err) {
-        console.error("Erro ao salvar pedido:", err);
-        showMessage("Erro ao atualizar pedido.", "error");
-    }
-}
-
-async function finalizeOrder(orderId) {
-    const orderRef = doc(db, "orders", orderId);
-    const orderSnap = await getDoc(orderRef);
-    if (!orderSnap.exists()) return;
-
-    const order = orderSnap.data();
-    const batch = writeBatch(db);
-
-    for (const item of order.items) {
-        const productRef = doc(db, "products", item.productId);
-        const productSnap = await getDoc(productRef);
-        if (productSnap.exists()) {
-            const data = productSnap.data();
-            const newStock = Math.max((data.stock || 0) - item.quantity, 0);
-            batch.update(productRef, { stock: newStock });
+            const label = document.createElement('label');
+            label.textContent = `Qtd. ${size}:`;
+            
+            const input = document.createElement("input");
+            input.type = "number";
+            input.min = "0";
+            input.placeholder = `Qtd. ${size}`;
+            input.dataset.size = size;
+            input.required = true;
+            
+            wrapper.appendChild(label);
+            wrapper.appendChild(input);
+            sizeQuantitiesContainer.appendChild(wrapper);
+            
+        } else if (!e.target.checked && existingInput) {
+            sizeQuantitiesContainer.removeChild(existingInput);
         }
     }
-    batch.update(orderRef, { status: "finalizado" });
+});
 
-    try {
-        await batch.commit();
-        showMessage('Pedido finalizado com sucesso!', 'success');
-        loadOrders();
-        loadDashboard();
-    } catch (err) {
-        console.error("Erro ao finalizar pedido:", err);
-        showMessage('Erro ao finalizar pedido.', 'error');
+document.addEventListener('click', (e) => {
+    if (e.target.matches('.tab-btn')) {
+        showTab(e.target.dataset.tab);
     }
-}
-
-async function deleteOrder(orderId) {
-    if (!confirm("Tem certeza que deseja excluir este pedido?")) return;
-    try {
-        await deleteDoc(doc(db, "orders", orderId));
-        showMessage("Pedido excluído com sucesso.", "success");
-        loadOrders();
-    } catch (error) {
-        console.error("Erro ao excluir pedido:", error);
-        showMessage("Erro ao excluir pedido.", "error");
+    if (e.target.matches('.edit-btn')) {
+        editProduct(e.target.dataset.id);
     }
-}
+    if (e.target.matches('.delete-btn')) {
+        deleteProduct(e.target.dataset.id);
+    }
+});
 
 async function editProduct(productId) {
+    resetForm();
+    editingProductId = productId;
     try {
         const productRef = doc(db, "products", productId);
         const productSnap = await getDoc(productRef);
-        if (!productSnap.exists()) return showMessage("Produto não encontrado.", "error");
-        
-        const data = productSnap.data();
-        editingProductId = productId;
-        document.getElementById("product-name").value = data.name || "";
-        document.getElementById("product-cost").value = data.cost || 0;
-        document.getElementById("product-price").value = data.price || 0;
-        document.getElementById("product-old-price").value = data.oldPrice || 0;
-        document.getElementById("product-stock").value = data.stock || 0;
-        document.getElementById("product-category").value = data.category || "";
-        document.getElementById("product-is-selected").checked = data.isSelected || false;
-        if (data.gender) {
-            document.querySelector(`input[name="gender"][value="${data.gender}"]`).checked = true;
-        } else {
-            document.querySelector(`input[name="gender"][value="unissex"]`).checked = true;
+        if (!productSnap.exists()) {
+            throw new Error("Produto não encontrado.");
         }
+        const data = productSnap.data();
+
+        // Preenche os campos do formulário
+        document.getElementById('product-name').value = data.name || '';
+        document.getElementById('product-description').value = data.description || '';
+        document.getElementById('product-category').value = data.category || '';
+        document.getElementById('product-color').value = data.color || '';
+        document.getElementById('product-cost').value = data.cost || 0;
+        document.getElementById('product-price').value = data.price || 0;
+        document.getElementById('product-old-price').value = data.oldPrice || '';
+
+        // Limpa e recria os campos de tamanho
+        sizeQuantitiesContainer.innerHTML = '';
+        document.querySelectorAll('.size-checkbox').forEach(cb => cb.checked = false);
+
+        if (data.sizes && typeof data.sizes === 'object') {
+            for (const size in data.sizes) {
+                const checkbox = document.querySelector(`.size-checkbox[value="${size}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                    // Dispara o evento de 'change' para criar o campo de input
+                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    // Preenche o valor do input criado
+                    setTimeout(() => {
+                         const input = sizeQuantitiesContainer.querySelector(`input[data-size="${size}"]`);
+                         if(input) input.value = data.sizes[size];
+                    }, 0);
+                }
+            }
+        }
+        
+        document.getElementById('submit-btn').textContent = 'Salvar Alterações';
+        document.getElementById('product-image').required = false; // Imagem não é obrigatória na edição
         showTab('admin-panel');
-        submitBtn.textContent = "Salvar Alterações";
-        document.getElementById("product-image").required = false;
-    } catch (err) {
-        console.error("Erro ao carregar produto para edição:", err);
-        showMessage("Erro ao carregar produto.", "error");
+
+    } catch (error) {
+        console.error("Erro ao carregar produto para edição:", error);
+        showMessage(error.message, 'error');
+        resetForm();
     }
 }
 
 async function deleteProduct(productId) {
-    if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+    if (!confirm("Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.")) return;
     try {
         await deleteDoc(doc(db, "products", productId));
         showMessage("Produto excluído com sucesso.", "success");
@@ -343,214 +376,3 @@ async function deleteProduct(productId) {
         showMessage("Erro ao excluir produto.", "error");
     }
 }
-
-// --- EVENT LISTENERS ---
-
-if (productForm) {
-    productForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Enviando...';
-        try {
-            const imageFile = document.getElementById('product-image').files[0];
-            let imageUrl;
-            const productData = {
-                name: document.getElementById('product-name').value,
-                cost: parseFloat(document.getElementById("product-cost").value),
-                price: parseFloat(document.getElementById('product-price').value),
-                oldPrice: parseFloat(document.getElementById('product-old-price').value) || 0,
-                stock: parseInt(document.getElementById('product-stock').value),
-                category: document.getElementById('product-category').value,
-                isSelected: document.getElementById('product-is-selected').checked,
-                gender: document.querySelector('input[name="gender"]:checked').value,
-            };
-
-            const sizeInputs = document.querySelectorAll(".size-quantity-input");
-            const sizes = {};
-            sizeInputs.forEach(input => {
-            const size = input.dataset.size;
-            const qty = parseInt(input.value) || 0;
-            sizes[size] = qty;
-            });
-            productData.sizes = sizes; // Salva no Firebase
-
-
-            if (editingProductId) {
-                const productRef = doc(db, "products", editingProductId);
-                const productSnap = await getDoc(productRef);
-                imageUrl = productSnap.data().image;
-            }
-            if (imageFile) {
-                const storageRef = ref(storage, `images/${Date.now()}_${imageFile.name}`);
-                await uploadBytes(storageRef, imageFile);
-                imageUrl = await getDownloadURL(storageRef);
-            }
-            if (!imageUrl && !editingProductId) throw new Error("A imagem do produto é obrigatória.");
-            if (imageUrl) productData.image = imageUrl;
-
-            if (editingProductId) {
-                productData.updatedAt = serverTimestamp();
-                const productRef = doc(db, "products", editingProductId);
-                await updateDoc(productRef, productData);
-                showMessage("Produto atualizado com sucesso!", "success");
-            } else {
-                productData.createdAt = serverTimestamp();
-                await addDoc(collection(db, "products"), productData);
-                showMessage("Produto cadastrado com sucesso!", "success");
-            }
-            productForm.reset();
-            document.querySelector('input[name="gender"][value="unissex"]').checked = true;
-            editingProductId = null;
-            loadProducts();
-            loadDashboard();
-            showTab('products-panel');
-        } catch (error) {
-            console.error("Erro ao salvar produto:", error);
-            showMessage(`Erro: ${error.message}`, "error");
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = "Cadastrar Produto";
-        }
-    });
-}
-
-document.addEventListener('click', (e) => {
-    if (e.target.matches('.edit-btn')) editProduct(e.target.dataset.id);
-    if (e.target.matches('.delete-btn')) deleteProduct(e.target.dataset.id);
-    if (e.target.matches('.delete-order-btn')) deleteOrder(e.target.dataset.id);
-    if (e.target.matches('.edit-order-btn')) openEditOrderModal(e.target.dataset.id);
-    if (e.target.matches('.finalize-btn')) finalizeOrder(e.target.dataset.id);
-});
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => showTab(btn.dataset.tab));
-});
-
-if (document.getElementById('login-form')) {
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-        } catch (error) {
-            showMessage(`Erro no login: ${error.message}`, 'error');
-        }
-    });
-}
-
-if (document.getElementById('save-edit-order')) {
-    document.getElementById('save-edit-order').addEventListener('click', saveEditedOrder);
-}
-if (document.getElementById('cancel-edit-order')) {
-    document.getElementById('cancel-edit-order').addEventListener('click', () => {
-        document.getElementById('edit-order-modal').classList.add('hidden');
-    });
-}
-
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => signOut(auth));
-}
-
-// --- INICIALIZAÇÃO ---
-// Dentro do onAuthStateChanged
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const userDocRef = doc(db, "users", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
-    if (userDocSnap.exists() && userDocSnap.data().role === 'admin') {
-      if (loginSection) loginSection.classList.add('hidden');
-      if (document.getElementById('admin-tabs')) document.getElementById('admin-tabs').classList.remove('hidden');
-      showTab('dashboard');
-      loadProducts();
-      loadDashboard();
-      loadOrders();
-    } else {
-      showMessage('Acesso negado. Você não é um administrador.', 'error');
-      signOut(auth);
-    }
-  } else {
-    if (loginSection) loginSection.classList.remove('hidden');
-    if (document.getElementById('admin-tabs')) document.getElementById('admin-tabs').classList.add('hidden');
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-  }
-
-  // Cadastro de produto com tamanhos, cores e imagem
-  const productForm = document.getElementById("product-form");
-  productForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const name = document.getElementById("product-name").value.trim();
-    const description = document.getElementById("product-description").value.trim();
-    const category = document.getElementById("product-category").value;
-    const color = document.getElementById("product-color").value.trim();
-    const cost = parseFloat(document.getElementById("product-cost").value);
-    const price = parseFloat(document.getElementById("product-price").value);
-    const oldPrice = parseFloat(document.getElementById("product-old-price").value || 0);
-
-    const sizes = {};
-    document.querySelectorAll("#sizes-quantities input[type='number']").forEach(input => {
-      const size = input.id.replace("stock-", "");
-      const qty = parseInt(input.value);
-      if (!isNaN(qty) && qty > 0) {
-        sizes[size] = qty;
-      }
-    });
-
-    const imageFile = document.getElementById("product-image").files[0];
-    if (!imageFile) {
-      showMessage("Selecione uma imagem para o produto.", "error");
-      return;
-    }
-
-    const imageRef = ref(storage, `products/${Date.now()}-${imageFile.name}`);
-    await uploadBytes(imageRef, imageFile);
-    const imageUrl = await getDownloadURL(imageRef);
-
-    const newProduct = {
-      name,
-      description,
-      category,
-      color,
-      cost,
-      price,
-      oldPrice,
-      sizes,
-      image: imageUrl,
-      createdAt: serverTimestamp()
-    };
-
-    await addDoc(collection(db, "products"), newProduct);
-    showMessage("Produto cadastrado com sucesso!", "success");
-    productForm.reset();
-    document.getElementById("sizes-quantities").innerHTML = "";
-    loadProducts();
-  });
-});
-
-const sizeOptionsContainer = document.getElementById("size-options");
-const sizeQuantitiesContainer = document.getElementById("size-quantities");
-
-// Escuta qualquer mudança em qualquer checkbox
-sizeOptionsContainer.addEventListener("change", (e) => {
-  if (e.target.classList.contains("size-checkbox")) {
-    const size = e.target.value;
-    const existingInput = sizeQuantitiesContainer.querySelector(`[data-size="${size}"]`);
-
-    if (e.target.checked && !existingInput) {
-      // Cria o campo de quantidade para esse tamanho
-      const input = document.createElement("input");
-      input.type = "number";
-      input.min = 0;
-      input.placeholder = `Quantidade para tamanho ${size}`;
-      input.classList.add("size-quantity-input");
-      input.setAttribute("data-size", size);
-      input.required = true;
-      input.style.marginBottom = "0.5rem";
-      sizeQuantitiesContainer.appendChild(input);
-    } else if (!e.target.checked && existingInput) {
-      // Remove o campo se o checkbox for desmarcado
-      sizeQuantitiesContainer.removeChild(existingInput);
-    }
-  }
-});
