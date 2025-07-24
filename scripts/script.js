@@ -1,21 +1,14 @@
-// Importar todas as funções necessárias do Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+// O CÓDIGO CORRETO
+
+// 1. Importe a 'app' já pronta do seu arquivo de configuração.
+//    Não se esqueça do "./" no início do caminho.
+import { app } from './firebase-config.js';
+
+// 2. Importe apenas as outras funções que você vai usar (sem initializeApp).
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-// Sua configuração do Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyByAi0e0M0lbLiIq1h1wdrRS_E2azAKiCQ",
-  authDomain: "emporiokids-bcb70.firebaseapp.com",
-  projectId: "emporiokids-bcb70",
-  storageBucket: "emporiokids-bcb70.firebasestorage.app",
-  messagingSenderId: "782267880563",
-  appId: "1:782267880563:web:38490d1c58c293dde20606",
-  measurementId: "G-DVN6TTMN2X"
-};
-
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
+// 3. Use a 'app' que você importou para obter os outros serviços.
 const db = getFirestore(app);
 const auth = getAuth(app);
 let currentUser = null;

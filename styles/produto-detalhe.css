@@ -164,3 +164,74 @@
     font-style: italic;
     color: #a0a0a0;
 }
+
+/* Adicione este código ao final do seu produto-detalhe.css */
+
+.size-selector {
+    margin: 2rem 0;
+}
+
+.size-selector h4 {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.size-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.size-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #444;
+    background-color: transparent;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.size-btn:hover:not(:disabled) {
+    background-color: #1a1a1a;
+    border-color: #666;
+}
+
+.size-btn.selected {
+    background-color: var(--cor-primaria, #dfdfdf);
+    color: #111;
+    border-color: var(--cor-primaria, #dfdfdf);
+    font-weight: 700;
+}
+
+.size-btn:disabled {
+    background-color: #2a2a2a;
+    color: #666;
+    cursor: not-allowed;
+    text-decoration: line-through;
+    border-color: #333;
+}
+
+.size-error-message {
+    color: #f44336; /* Cor de erro */
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Ajustes na descrição */
+#product-description .general-text {
+    margin-bottom: 1.5rem;
+}
+
+#product-description .extra-info {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #a0a0a0;
+}

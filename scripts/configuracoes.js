@@ -1,20 +1,11 @@
-// SUBSTITUA TODO O CONTEÚDO DE configuracoes.js POR ESTE CÓDIGO
+// 1. Importa a 'app' já configurada do arquivo central.
+import { app } from './firebase-config.js';
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+// 2. Importa as outras funções do Firebase que a página de configurações precisa.
 import { getAuth, onAuthStateChanged, signOut, updateProfile, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, collection, query, where, getDocs, orderBy, doc, addDoc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyByAi0e0M0lbLiIq1h1wdrRS_E2azAKiCQ",
-  authDomain: "emporiokids-bcb70.firebaseapp.com",
-  projectId: "emporiokids-bcb70",
-  storageBucket: "emporiokids-bcb70.firebasestorage.app",
-  messagingSenderId: "782267880563",
-  appId: "1:782267880563:web:38490d1c58c293dde20606",
-  measurementId: "G-DVN6TTMN2X"
-};
-
-const app = initializeApp(firebaseConfig);
+// 3. Usa a 'app' importada para obter os serviços de autenticação e banco de dados.
 const auth = getAuth(app);
 const db = getFirestore(app);
 let currentUser = null;

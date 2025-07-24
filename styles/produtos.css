@@ -261,3 +261,47 @@
         margin: 10px auto;
     }
 }
+
+/* Adicione ou modifique estas classes no seu produtos.css */
+
+.filtros {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    color: #333; /* Cor do texto dentro dos filtros */
+}
+
+.filtro-grupo h4 {
+    color: #000; /* Cor dos títulos de filtro */
+    font-weight: 600;
+}
+
+.filtro-grupo label {
+    color: #333;
+    font-weight: 500;
+}
+
+.filtro-grupo label:hover {
+    color: #59daec; /* Sua cor secundária */
+}
+
+/* Classe para filtros com múltiplas colunas (tamanho e cor) */
+.filtro-opcoes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Duas colunas */
+    gap: 0.5rem;
+}
+
+.close-filtros-btn {
+    color: #333; /* Ajusta a cor do botão de fechar no mobile */
+}
+
+.filtros-header h3 {
+     color: #000; /* Cor do título no mobile */
+}
+
+.toggle-filtros-btn {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    color: #333;
+    font-weight: 600;
+}

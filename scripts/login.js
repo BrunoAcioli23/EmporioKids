@@ -4,28 +4,22 @@ const registerFormContainer = document.getElementById('register-form');
 const showRegisterLink = document.getElementById('show-register');
 const showLoginLink = document.getElementById('show-login');
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+// 1. Importa a 'app' já configurada do seu arquivo central.
+import { app } from './firebase-config.js';
+
+// 2. Importa as outras funções que você precisa para a página de login/registro.
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyByAi0e0M0lbLiIq1h1wdrRS_E2azAKiCQ",
-  authDomain: "emporiokids-bcb70.firebaseapp.com",
-  projectId: "emporiokids-bcb70",
-  storageBucket: "emporiokids-bcb70.firebasestorage.app",
-  messagingSenderId: "782267880563",
-  appId: "1:782267880563:web:38490d1c58c293dde20606",
-  measurementId: "G-DVN6TTMN2X"
-};
-
-const app = initializeApp(firebaseConfig);
+// 3. Usa a 'app' importada para obter os serviços.
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// O resto do seu código (lógica de login, registro, etc.) continua aqui.
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    window.location.href = "configuracoes.html";
-  }
+  if (user) {
+    window.location.href = "configuracoes.html";
+  }
 });
 
 // --- LÓGICA DE CADASTRO BÁSICO (alert) ---
