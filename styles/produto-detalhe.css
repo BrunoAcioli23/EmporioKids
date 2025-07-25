@@ -34,7 +34,7 @@
 
 .product-info-details #breadcrumbs {
     font-size: 0.8rem;
-    color: #a0a0a0;
+    color: #000;
     margin-bottom: 1rem;
 }
 
@@ -64,7 +64,7 @@
 }
 
 .installments-info {
-    color: #ccc;
+    color: #000;
     margin-bottom: 2rem;
 }
 
@@ -113,7 +113,7 @@
 }
 
 #product-description {
-    color: #ccc;
+    color: #000;
     line-height: 1.6;
 }
 

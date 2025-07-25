@@ -284,6 +284,8 @@
             width: 100%;
             max-height: 400px;
             object-fit: cover;
+            border: 2px solid #fff;
+            border-radius:10px;
         }
         
         .swiper-pagination-bullet {
@@ -387,7 +389,6 @@
 
         /* --- Card de Produto --- */
         .product-card {
-            background-color: #f4feff;
             border-radius: 0.5rem;
             overflow: hidden;
             display: flex;
@@ -396,17 +397,13 @@
             width: 100%; /* Ocupar todo o espaço do slide */
             max-width: 350px;
             height: 100%; /* Ocupar toda a altura do slide */
-            min-height: 500px;;
-            max-height: 500px;;
+            max-height: 500px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0px 0px 14px #fff;
-            border: 2px solid #28cce2;
             cursor: pointer;
         }
         
         .product-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0px 0px 20px #fff;
         }
 
         .product-image-wrapper {
@@ -417,6 +414,8 @@
             width: 100%;
             height: 16rem; /* 256px */
             object-fit: cover;
+            border: 2px solid #fff;
+            border-radius: 10px;
         }
 
         .favorite-btn {
@@ -440,7 +439,7 @@
             font-weight: 500;
             flex-grow: 1;
             text-align: center;
-            color: var(--cor-secundaria);
+            color: var(--cor-primaria);
         }
 
         .product-rating {
@@ -461,36 +460,41 @@
 
         .product-pricing {
             margin: 0.5rem 0;
+            display: flex;
+            flex-direction: column;
             text-align: center;
         }
 
         .product-pricing .old-price {
             color: #6b7280;
             text-decoration: line-through;
+            font-size: 0.9rem;
         }
 
         .product-pricing .current-price {
-            font-size: 1.25rem;
+            font-size: 1.35rem;
             font-weight: 700;
             margin-left: 0.5rem;
-            color: var(--cor-secundaria);
+            color: var(--cor-primaria);
         }
 
         .add-to-cart-btn {
-            margin-top: 1rem;
             width: 100%;
-            background-color: var(--cor-secundaria);
-            color: #fff;
+            background-color: var(--cor-primaria);
+            color: var(--cor-secundaria);
             font-weight: 700;
             padding: 0.75rem;
             border-radius: 0.5rem;
             border: none;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            box-shadow: 0 0 14px 0 #fff;
         }
 
         .add-to-cart-btn:hover {
             background-color: #ccf9ff; /* Hover mais escuro para o cinza */
+            box-shadow: 0 0 20px 0 #fff;
+
         }
 
         /* --- Rodapé --- */
@@ -733,20 +737,27 @@
             font-size: 1.1rem;
         }
         .footer-column a {
-            color: var(--cor-secundaria);
+            color: #000;
+            transition: all 0.3s ease;
         }
         .footer-column a:hover {
-            color: var(--cor-primaria);
+            color: var(--cor-secundaria);
         }
         .footer-contact-card {
-            border: 1px solid #000;
+            border: 2px solid #000;
             border-radius: 8px;
             padding: 1.5rem;
-            background-color: #28cce2
+            background: linear-gradient(120deg, #fff, #59daec, #fff);
+            background-size: 200% 200%;
+            animation: degradeAnimado 10s ease infinite;
         }
 
         .footer-contact-card a {
-            color: #fff;
+            color: #000;
+        }
+
+        .footer-contact-card a:hover {
+            color: var(--cor-primaria);
         }
 
         .footer-contact-card .logo {
@@ -754,7 +765,7 @@
             margin-bottom: 1rem;
         }
         .footer-contact-card p {
-            color: var(--cor-primaria);
+            color: #000;
             margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
@@ -763,7 +774,7 @@
             margin-right: 0.8rem;
             width: 20px;
             text-align: center;
-            color: var(--cor-primaria)
+            color: #000
         }
         .footer-bottom {
             border-top: 1px solid #333;
@@ -776,14 +787,15 @@
             text-align: center;
         }
         .footer-bottom .social-links a {
-            color: #fff;
+            color: #000;
             font-size: 1.5rem;
+            transition: all 0.3s ease;
         }
         .footer-bottom .social-links a:hover {
-            color: var(--cor-secundaria);
+            transform: translateY(-3px)
         }
         .footer-bottom p {
-            color: var(--cor-secundaria);
+            color: #000;
             font-size: 0.9rem;
             margin: 20px 0 0 0;
         }
@@ -921,7 +933,7 @@
         }
 
         .newsletter p {
-            color: #ccc;
+            color: #414141;
             font-size: 1.2rem;
 
         }
@@ -1049,7 +1061,7 @@
             position: absolute;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 2px solid #333;
+            border: 2px solid #fff;
             transition: transform 0.4s ease-in-out;
         }
         .image-stack img:hover {
@@ -1680,7 +1692,7 @@
 /* Colapsável */
 .footer-toggle {
   background: none;
-  color: var(--cor-secundaria);
+  color: #000;
   font-size: 1.1rem;
   font-weight: 600;
   width: 100%;
@@ -1692,6 +1704,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.3s ease;
+}
+
+.footer-toggle:hover {
+  color: var(--cor-secundaria);
 }
 
 .footer-toggle::after {
